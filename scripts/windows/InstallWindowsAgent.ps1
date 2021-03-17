@@ -28,10 +28,25 @@ Function AgentIsOnFileSystem()
 {
     Test-Path -Path:(${AGENT_PATH} + '/' + ${AGENT_BINARY_NAME})
 }
-Function InstallAgent()
+Function CheckProgramInstalled($programName)
 {
-    $params = ("${AGENT_INSTALLER_PATH}", "-k ${JumpCloudConnectKey}", "/VERYSILENT", "/NORESTART", "/NOCLOSEAPPLICATIONS", "/NORESTARTAPPLICATIONS", "/LOG=$env:TEMP\jcUpdate.log")
-    Invoke-Expression "$params"
+    $installed = (Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object { $_.DisplayName -match $programName })
+    if (-not [System.String]::IsNullOrEmpty($installed))
+    {
+        return $true
+    }
+    else
+    {
+        $installed = (Get-ItemProperty HKLM:SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object { $_.DisplayName -match $programName })
+        if (-not [System.String]::IsNullOrEmpty($installed))
+        {
+            return $true
+        }
+        else
+        {
+            return $false
+        }
+    }
 }
 Function DownloadAgentInstaller()
 {
